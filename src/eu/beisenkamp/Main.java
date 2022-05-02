@@ -21,9 +21,13 @@ public class Main {
     static int ystart = 25;
     static int yschritt = 1;
     static int ymax = 150;
-    static double lymax = 0.03;
-    static double lystart = 0.06;
-    static double br = 0.3;
+    static int yBohrungMax = ystart + 15;
+    static double xBohrung = 0.15;
+    static double zBohrung = 0.02;
+    static double radiusBohrung = 0.0015;
+    static double lymax = 0.05;
+    static double lystart = 0.08;
+    static double br = 1;
     static double yspitze = 158.0;
     static GLVektor V = new GLVektor(-0.01,0,0);
 
@@ -82,14 +86,47 @@ public class Main {
                     writeFacet(writer,A,B,C);
                     writeFacet(writer,A,C,D);
 
+                    //Bohrung
+                    double startwinkel = -90;
+                    GLVektor apb = new GLVektor(xBohrung, 0, zBohrung);
+                    apb.multipliziere(skalierungsfaktor(ystart));
+                    apb.rotiere(rotationsfaktor(ystart), 0, 1, 0);
+                    GLVektor radius = new GLVektor(0, 0, radiusBohrung);
+                    radius.rotiere(-startwinkel - 360.0 * zaehler / (profile.size()-1), 0, 1, 0);
+                    apb.addiere(radius);
+                    GLVektor npb = new GLVektor(xBohrung, 0, zBohrung);
+                    npb.multipliziere(skalierungsfaktor(ystart));
+                    radius = new GLVektor(0, 0, radiusBohrung);
+                    npb.rotiere(rotationsfaktor(ystart), 0, 1, 0);
+                    radius.rotiere(-startwinkel - 360.0 * (zaehler + 1) / (profile.size()-1), 0, 1, 0);
+                    npb.addiere(radius);
+                    GLVektor Ab = new GLVektor(apb.x * br, y / 1000.0, apb.z * br);
+                    GLVektor Bb = new GLVektor(npb.x * br, y / 1000.0, npb.z * br);
+                    GLVektor Db = new GLVektor(apb.x * br, (y + yschritt) / 1000.0, apb.z * br);
+                    GLVektor Cb = new GLVektor(npb.x * br, (y + yschritt) / 1000.0, npb.z * br);
+                    if(y < yBohrungMax) {
+                        writeFacet(writer, Ab, Cb, Bb);
+                        writeFacet(writer, Ab, Db, Cb);
+                    }
+
                     //Untere Flügelfläche
                     if (y == ystart){
-                        GLVektor C1 = new GLVektor(profile.get(0));
+                        /*GLVektor C1 = new GLVektor(profile.get(0));
                         C1.multipliziere(skalierungsfaktor(ystart));
                         C1.rotiere(rotationsfaktor(ystart), 0, 1, 0);
                         GLVektor C2 = new GLVektor(C1.x*br, ystart/1000.0, C1.z*br);
-                        writeFacet(writer,C2,A,B);
+                        writeFacet(writer,C2,A,B);*/
+                        writeFacet(writer, A, B, Ab);
+                        writeFacet(writer, Bb, Ab, B);
                     }
+                    if(y == yBohrungMax) {
+                        GLVektor center = new GLVektor(xBohrung, 0, zBohrung);
+                        center.multipliziere(skalierungsfaktor(ystart));
+                        center.rotiere(rotationsfaktor(ystart), 0, 1, 0);
+                        center = new GLVektor(center.x*br,yBohrungMax/1000.0,center.z*br);
+                        writeFacet(writer, Ab,Bb,center);
+                    }
+
 
                     //Obere Flügelfläche
                     if (y == ymax-yschritt){
@@ -186,9 +223,10 @@ public class Main {
     }
 
     private static double skalierungsfaktor(int py) {
-        double m = (lymax-lystart)/(ymax-ystart);
+        /*double m = (lymax-lystart)/(ymax-ystart);
         double b = (lymax-m*ymax);
-        return m*py+b;
+        return m*py+b;*/
+        return lystart*ystart*1.0/py;
     }
 
     private static double rotationsfaktor(int py){
