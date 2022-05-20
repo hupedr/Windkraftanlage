@@ -18,19 +18,23 @@ import java.util.logging.Logger;
 public class Main {
 
 
-    static int ystart = 25;
+    static int ystart = 21;
     static int yschritt = 1;
-    static int ymax = 150;
-    static int yBohrungMax = ystart + 15;
-    static double xBohrung = 0.15;
-    static double zBohrung = 0.02;
-    static double radiusBohrung = 0.0015;
+    static int ymax = 146;
+    static int ywurzel = 51;
+    static double lwurzelfaktor = 0.4;
+    static int yBohrungMax = ystart + 10;
+    static double xBohrung = 0.13;
+    static double zBohrung = 0.01;
+    static double radiusBohrung = 0.00225;
     static double lymax = 0.05;
-    static double lystart = 0.08;
+
+    static double lystart = 0.12;
     static double br = 1;
     static double yspitze = 158.0;
     static GLVektor V = new GLVektor(-0.01,0,0);
 
+    static double slz = 5;
 
     public static void main(String[] args) {
 
@@ -64,17 +68,25 @@ public class Main {
 
                     //untere Punkte aus der Liste
                     GLVektor ap = new GLVektor( profile.get(zaehler));
+                    ap.multipliziere(wurzelfaktor(y));
+                    ap.x = ap.gibX()*wurzelfaktor(y);
                     ap.multipliziere(skalierungsfaktor(y));
                     ap.rotiere(rotationsfaktor(y), 0, 1, 0);
                     GLVektor np = new GLVektor(profile.get(zaehler+1));
+                    np.multipliziere(wurzelfaktor(y));
+                    np.x = np.gibX()*wurzelfaktor(y);
                     np.multipliziere(skalierungsfaktor(y));
                     np.rotiere(rotationsfaktor(y), 0, 1, 0);
 
                     //obere Punkte aus der Liste
                     GLVektor apo = new GLVektor(profile.get(zaehler));
+                    apo.multipliziere(wurzelfaktor(y+yschritt));
+                    apo.x = apo.gibX()*wurzelfaktor(y+yschritt);
                     apo.multipliziere(skalierungsfaktor(y+yschritt));
                     apo.rotiere(rotationsfaktor(y+yschritt), 0, 1, 0);
                     GLVektor npo = new GLVektor(profile.get(zaehler+1));
+                    npo.multipliziere(wurzelfaktor(y+yschritt));
+                    npo.x = npo.gibX()*wurzelfaktor(y+yschritt);
                     npo.multipliziere(skalierungsfaktor(y+yschritt));
                     npo.rotiere(rotationsfaktor(y+yschritt), 0, 1, 0);
 
@@ -226,12 +238,12 @@ public class Main {
         /*double m = (lymax-lystart)/(ymax-ystart);
         double b = (lymax-m*ymax);
         return m*py+b;*/
-        return lystart*ystart*1.0/py;
+        //return lystart*ystart*1.0/py;
+        return lystart * Math.sqrt(((4.0/9) + (slz*ystart/ymax) * (slz*ystart/ymax)) / ((4.0/9) + (slz*py/ymax) * (slz*py/ymax)));
     }
 
     private static double rotationsfaktor(int py){
-        double slz = 5;
-        double alpha = Math.atan(slz*py/ymax);
+        double alpha = Math.atan(slz*1.5*py/ymax);
         return Math.toDegrees(alpha);
     }
 
@@ -240,5 +252,12 @@ public class Main {
         double b = 90-m*yspitze;
         return -(m*py+b);
 
+    }
+
+    private static double wurzelfaktor(int py) {
+        double relativy = Math.min(1,1.0*(py-ystart)/(ywurzel-ystart));
+        double faktor = -lwurzelfaktor*((relativy-1)*(relativy-1))+1;
+        //System.out.println("Y:"+py+" relativy: "+relativy+ " factor: "+faktor);
+        return faktor;
     }
 }
